@@ -33,7 +33,7 @@
 KW_XDIM = [ "xdim", "rows" ]
 KW_YDIM = [ "ydim", "cols", "columns" ]
 KW_ROT = [ "rot", "rotation", "dir", "direction" ]
-KW_CURSET = [ "settings", "set", "cur", "current", "curset" ]
+KW_CURSET = [ "curset", "cur", "current", "settings", "set" ]
 KW_HELP = [ "help", "usage" ]
 KW_QUIT = [ "quit", "exit" ]
 KW_LST = [ KW_XDIM, KW_YDIM, KW_ROT, KW_CURSET, KW_HELP, KW_QUIT ]
@@ -44,10 +44,10 @@ KW_YDIM_DESC = "Y-dimension of the matrix the message is mapped to before" \
 				+"being rotated."
 KW_ROT_DESC = "Direction to rotate the matrix."
 KW_CURSET_DESC = "Display the current settings."
-KW_HELP = "Dispay usage information."
-KW_QUIT = "Exit the application."
+KW_HELP_DESC = "Dispay usage information."
+KW_QUIT_DESC = "Exit the application."
 KW_DESC = [ KW_XDIM_DESC, KW_YDIM_DESC, KW_ROT_DESC, KW_CURSET_DESC,
-			KW_HELP, KW_QUIT ]
+			KW_HELP_DESC, KW_QUIT_DESC ]
 
 DIM_AUTO = [ "auto" ]
 DIM_SQ = [ "sq", "square" ]
@@ -85,13 +85,23 @@ def match_keyword(kw):
 				return KW_LST[i]
 	return INV_KW
 
+def is_valid_dim(val):
+	if val.isdigit():
+		return True
+
+	for lst in KW_DIM_VAL:
+		for alias in lst:
+			if val == alias:
+				return True
+
+	return False
+
 def banner():
 	print("transposition-cypher -- v"+version)
 	print("Type `help' for usage information")
 
-def usage(kw):
-	print("foo")
-	if kw is None:
+def usage(kw=None):
+	if kw is None or kw == "":
 		print("Input may be either:\n" \
 				+"\t(1) a message to be encrypted with the currect settings"
 				+"\n"
@@ -121,9 +131,17 @@ def usage(kw):
 			print(KW_DESC[dex])
 
 def curset():
-	print("xdim:",str(xdim), sep='\t')
-	print("ydim:",str(ydim), sep='\t')
-	print("rotation:",rot, sep='\t')
+	if xdim == DIM_AUTO:
+		print("xdim:\t\tauto")
+	else:
+		print("xdim:",str(xdim), sep='\t\t')
+
+	if ydim == DIM_AUTO:
+		print("ydim:\t\tauto")
+	else:
+		print("ydim:",str(ydim), sep='\t\t')
+
+	print("rotation:",rot[1], sep='\t')
 
 def main():
 	running = True
@@ -132,25 +150,34 @@ def main():
 
 	while running:
 		s = input()
-		val = ""
+
+		if s == "":
+			continue
 
 		kw = s.split()[0]
 		if "=" in kw:
-			val = kw[kw.index("=")+1:]
-			val = kw.split()[0]
+			kw = kw.split("=")
+			val = kw[1]
+			kw = kw[0]
+		else:
+			val = ""
 		kw = match_keyword(kw)
 
 		if kw != INV_KW:
 			if kw == KW_XDIM:
-				if val.isdigit():
-					xdim = int(val)
+				if is_valid_dim(val):
+					if val.isdigit():
+						val = int(val)
+					xdim = val
 				else:
-					print("non-integer value passed to xdim")
+					print("invalid value passed to xdim")
 			elif kw == KW_YDIM:
-				if val.isdigit():
-					ydim = int(val)
+				if is_valid_dim(val):
+					if val.isdigit():
+						val = int(val)
+					ydim = val
 				else:
-					print("non-integer value passed to ydim")
+					print("invalid value passed to ydim")
 			elif kw == KW_ROT:
 				if val == "":
 					print("rotation keyword requires a value")
@@ -169,7 +196,11 @@ def main():
 			elif kw == KW_CURSET:
 				curset()
 			elif kw == KW_HELP:
-				usage()
+				s = s.split()
+				if len(s) >= 2:
+					usage(s[1])
+				else:
+					usage()
 			elif kw == KW_QUIT:
 				running = False
 		else:
