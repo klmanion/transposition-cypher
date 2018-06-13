@@ -35,24 +35,35 @@ import math
 KW_XDIM =	[ "xdim", "rows" ]
 KW_YDIM =	[ "ydim", "cols", "columns" ]
 KW_ROT =	[ "rot", "rotation", "dir", "direction" ]
+KW_PADC =	[ "padc", "padding-char" ]
 KW_CURSET =	[ "curset", "cur", "current", "settings", "set" ]
 KW_HELP =	[ "help", "usage" ]
 KW_QUIT =	[ "quit", "exit" ]
-KW_LST =	[ KW_XDIM, KW_YDIM, KW_ROT, KW_CURSET, KW_HELP, KW_QUIT ]
+KW_LST =	[ KW_XDIM, KW_YDIM, KW_ROT, KW_PADC,
+				KW_CURSET,
+				KW_HELP, KW_QUIT ]
 
 KW_XDIM_DESC = "X-dimension of the matrix the message is mapped to before" \
-				+"being rotated."
+				+" being rotated."
 KW_YDIM_DESC = "Y-dimension of the matrix the message is mapped to before" \
-				+"being rotated."
-KW_ROT_DESC = "Direction to rotate the matrix.\nValues:\n" \
-		+"\tclockwise (alias: cw),\n" \
-		+"\tcounter-clockwise (alias: ccw),\n" \
-		+"\ttwice (alias: tw)."
+				+" being rotated."
+KW_ROT_DESC = "Direction to rotate the matrix."
+KW_PADC_DESC = "Character to pad matrix with (default: 'X')"
 KW_CURSET_DESC = "Display the current settings."
 KW_HELP_DESC = "Dispay usage information."
 KW_QUIT_DESC = "Exit the application."
-KW_DESC = [ KW_XDIM_DESC, KW_YDIM_DESC, KW_ROT_DESC, KW_CURSET_DESC,
+KW_DESC = [ KW_XDIM_DESC, KW_YDIM_DESC, KW_ROT_DESC, KW_PADC_DESC,
+			KW_CURSET_DESC,
 			KW_HELP_DESC, KW_QUIT_DESC ]
+
+KW_XDIM_VALS = "\tauto,\n\tsqaure,\n\tany integer."
+KW_YDIM_VALS = "\tauto,\n\tsqaure,\n\tany integer."
+KW_ROT_VALS = "\tclockwise (alias: cw),\n" \
+				+"\tcounter-clockwise (alias: ccw),\n" \
+				+"\ttwice (alias: tw)."
+KW_PADC_VALS = "\tany ascii character"
+
+KW_VALS = [ KW_XDIM_VALS, KW_YDIM_VALS, KW_ROT_VALS, KW_PADC_VALS ]
 
 DIM_AUTO =	[ "auto" ]
 DIM_SQ =	[ "sq", "square" ]
@@ -67,12 +78,12 @@ KW_ROT_VAL = [ ROT_CW, ROT_CCW, ROT_TW ]
 INV_KW = []
 
 # will be made mutable later
-PAD_CHAR = 'X'
 
 # settings variables
 xdim = DIM_AUTO
 ydim = DIM_AUTO
 rot = ROT_CW
+padc = 'X'
 
 ver_major = 1
 ver_minor = 0
@@ -171,7 +182,11 @@ def usage(kw=None):
 					print(kw[i],", ", sep='', end='')
 				print(kw[sz-1],")", sep='')
 
-			print(KW_DESC[KW_LST.index(kw)])
+			dex = KW_LST.index(kw)
+			print(KW_DESC[dex])
+			if dex < len(KW_VALS):
+				print("Values:")
+				print(KW_VALS[dex])
 		else:
 			print("invalid keyword")
 
@@ -179,12 +194,14 @@ def curset():
 	print("xdim:",dim_to_str(xdim), sep='\t\t')
 	print("ydim:",dim_to_str(ydim), sep='\t\t')
 	print("rotation:",rot[1], sep='\t')
+	print("padc:",padc, sep='\t\t')
 
 def encrypt(s):
 	sz = len(s)
 	global xdim
 	global ydim
 	global rot
+	global padc
 	if xdim == DIM_SQ or ydim == DIM_SQ:
 		x = 1
 		y = x
@@ -224,7 +241,7 @@ def encrypt(s):
 		if sz - i < x:
 			lst = list(s[i:])
 			for i in range(pad_sz):
-				lst.append(PAD_CHAR)
+				lst.append(padc)
 		else:
 			lst = list(s[i:i+x])
 		matrix.append(lst[:])
@@ -256,6 +273,7 @@ def main():
 	global xdim
 	global ydim
 	global rot
+	global padc
 
 	banner()
 
@@ -302,6 +320,12 @@ def main():
 						rot = saved
 						print("invalid value passed to rotation")
 						usage(kw)
+
+			elif kw == KW_PADC:
+				if val.isascii():
+					padc = val[0]
+				else:
+					print("non-ascii character set as padding character")
 
 			elif kw == KW_CURSET:
 				curset()
